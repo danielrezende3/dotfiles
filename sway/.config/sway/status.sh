@@ -18,7 +18,7 @@ $0 ~ "Name: "sink { in_sink=1; next }
 /Active Port:/ && in_sink { print $3; exit }
 ')"
 
-# traduzir nome feio -> algo útil
+# traduzir nome feio → algo útil
 case "$PORT" in
     analog-output-headphones)
         OUT="Speaker"
