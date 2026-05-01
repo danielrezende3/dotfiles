@@ -36,4 +36,15 @@ esac
 
 DATE="$(LC_TIME=pt_BR.UTF-8 date '+%a %d/%m/%Y %H:%M')"
 
-echo "$OUT $VOL   $DATE"
+# checar internet
+if ip route get 1.1.1.1 >/dev/null 2>&1; then
+    if curl -s --max-time 2 https://1.1.1.1 >/dev/null; then
+        NET="🌐"
+    else
+        NET="⚠️"
+    fi
+else
+    NET="❌"
+fi
+
+echo "$OUT $VOL $NET $DATE"
