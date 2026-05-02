@@ -1,6 +1,4 @@
--- ============================================================
--- Leader keys
--- ============================================================
+-- -- Leader keys
 -- <leader> é uma tecla "prefixo" para atalhos personalizados.
 -- Aqui estamos usando espaço.
 --
@@ -11,107 +9,163 @@ vim.g.mapleader = " "
 vim.g.maplocalleader = " "
 
 
--- ============================================================
--- Opções básicas de interface
--- ============================================================
-
+-- -- Opções básicas de interface
 -- Mostra o número absoluto da linha atual.
 vim.opt.number = true
-
 -- Mostra números relativos nas outras linhas.
--- Útil para navegar com comandos como:
--- 5j  -> desce 5 linhas
--- 3k  -> sobe 3 linhas
--- d4j -> deleta até 4 linhas abaixo
 vim.opt.relativenumber = true
-
 -- Usa o clipboard do sistema.
 -- Permite copiar/colar entre Neovim e outros programas.
 -- Requer suporte do sistema, por exemplo xclip/wl-clipboard dependendo do ambiente.
 vim.opt.clipboard = "unnamedplus"
 
-
--- ============================================================
--- Indentação
--- ============================================================
-
+-- -- Indentação
 -- Converte Tab em espaços.
 vim.opt.expandtab = true
-
 -- Um caractere Tab ocupa visualmente 4 colunas.
 vim.opt.tabstop = 4
-
 -- Indentação automática usa 4 espaços.
 -- Afeta comandos como >>, << e autoindentação.
 vim.opt.shiftwidth = 4
+-- No modo insert, Tab insere 4 espaços.
+vim.opt.softtabstop = 4
+-- Ajuda na indentação automática simples.
+vim.opt.smartindent = true
 
 
--- ============================================================
--- Plugins com vim.pack
--- ============================================================
--- vim.pack é o gerenciador de plugins nativo do Neovim 0.12+.
+
+-- -- Bootstrap lazy.nvim
+-- lazy.nvim é o gerenciador de plugins.
 --
--- Ele baixa e carrega plugins diretamente a partir dos repositórios Git.
--- Não precisa de bootstrap manual como lazy.nvim.
---
--- Para atualizar plugins:
--- :lua vim.pack.update()
+-- Se ele ainda não existir, este bloco clona o repositório.
+-- Depois, adiciona o lazy.nvim ao runtime path do Neovim.
+local lazypath = vim.fn.stdpath("data") .. "/lazy/lazy.nvim"
+if not vim.uv.fs_stat(lazypath) then
+  vim.fn.system({
+    "git",
+    "clone",
+    "--filter=blob:none",
+    "https://github.com/folke/lazy.nvim.git",
+    "--branch=stable",
+    lazypath,
+  })
+end
+vim.opt.rtp:prepend(lazypath)
 
-vim.pack.add({
+
+
+-- -- Plugins com lazy.nvim
+require("lazy").setup({
   -- Tema lackluster.
   {
-    src = "https://github.com/slugbyte/lackluster.nvim",
-    name = "lackluster.nvim",
+    "slugbyte/lackluster.nvim",
+    lazy = false,
+    priority = 1000,
+    config = function()
+      vim.cmd.colorscheme("lackluster-mint")
+    end,
   },
-
   -- Configurações prontas de LSP para vários servidores.
   {
-    src = "https://github.com/neovim/nvim-lspconfig",
-    name = "nvim-lspconfig",
+    "neovim/nvim-lspconfig",
+    lazy = false,
   },
-
   -- Tree-sitter melhora highlight, parsing e suporte estrutural de código.
-  -- O branch main é o recomendado para Neovim mais novo.
   {
-    src = "https://github.com/nvim-treesitter/nvim-treesitter",
-    name = "nvim-treesitter",
-    version = "main",
+    "nvim-treesitter/nvim-treesitter",
+    branch = "main",
+    lazy = false,
+  },
+  -- Fecha automaticamente pares como: (), {}, [], "" etc.
+  {
+    "windwp/nvim-autopairs",
+    event = "InsertEnter",
+    config = function()
+      require("nvim-autopairs").setup({
+        check_ts = true,
+      })
+    end,
+  },
+  -- Completion engine.
+  -- Mostra sugestões de LSP, path e buffer no insert mode.
+  {
+    "saghen/blink.cmp",
+    version = "1.*",
+    opts = {
+      keymap = {
+        preset = "default",
+      },
+      sources = {
+        default = {
+          "lsp",
+          "path",
+          "snippets",
+          "buffer",
+        },
+      },
+      completion = {
+        menu = {
+          auto_show = true,
+        },
+        documentation = {
+          auto_show = true,
+          auto_show_delay_ms = 300,
+        },
+      },
+    },
   },
 })
 
-
--- ============================================================
--- Tema
--- ============================================================
--- Define o colorscheme.
--- Precisa vir depois do plugin do tema ser carregado.
-vim.cmd.colorscheme("lackluster-mint")
-
-
--- ============================================================
--- LSP: C/C++ com clangd
--- ============================================================
+-- -- LSP: C/C++ com clangd
 -- clangd é o language server para C/C++.
 -- Requer clangd instalado no sistema:
+--
 -- sudo apt install clangd
 vim.lsp.enable("clangd")
 
+-- -- Diagnostics: erros e warnings do LSP
+vim.diagnostic.config({
+  -- Mostra ícones na coluna da esquerda.
+  signs = true,
+  -- Mostra underline no trecho com problema.
+  underline = true,
+  -- Atualiza diagnostics enquanto você digita.
+  update_in_insert = false,
+  -- Não mostra texto inline o tempo todo.
+  -- Evita poluir a tela, principalmente em terminal de 80 colunas.
+  virtual_text = false,
+  -- Ordena por severidade.
+  severity_sort = true,
+  -- Janela flutuante com borda arredondada.
+  float = {
+    border = "rounded",
+    source = true,
+    max_width = 80,
+    wrap = true,
+  },
+})
 
--- ============================================================
--- Keymaps do LSP
--- ============================================================
-
+-- -- Keymaps do LSP
+-- Mostra diagnostics da linha atual em um popup.
+vim.keymap.set("n", "<leader>e", function()
+  vim.diagnostic.open_float(nil, {
+    border = "rounded",
+    source = true,
+    max_width = 80,
+    wrap = true,
+  })
+end, {
+  desc = "Show line diagnostic",
+})
 -- Vai para a definição do símbolo embaixo do cursor.
 -- Exemplo: função, variável, classe, método.
 vim.keymap.set("n", "gd", vim.lsp.buf.definition, {
   desc = "Go to definition",
 })
-
 -- Mostra referências do símbolo embaixo do cursor.
 vim.keymap.set("n", "gr", vim.lsp.buf.references, {
   desc = "Go to references",
 })
-
 -- Mostra documentação ou informação do símbolo embaixo do cursor.
 vim.keymap.set("n", "K", function()
   vim.lsp.buf.hover({
@@ -122,7 +176,6 @@ vim.keymap.set("n", "K", function()
 end, {
   desc = "Hover docs",
 })
-
 -- Renomeia símbolo no projeto.
 -- Exemplo: renomear uma variável/função/classe com suporte do LSP.
 vim.keymap.set("n", "<leader>rn", vim.lsp.buf.rename, {
@@ -149,20 +202,8 @@ end, {
 })
 
 
--- ============================================================
--- Tree-sitter
--- ============================================================
--- Ativa Tree-sitter automaticamente para alguns tipos de arquivo.
---
--- Isso melhora o highlight e o parsing do código.
--- O pcall evita quebrar o Neovim caso algum parser não esteja instalado.
---
--- Para instalar parsers manualmente:
--- :TSInstall c cpp lua vim vimdoc query markdown markdown_inline
---
--- Para atualizar parsers:
--- :TSUpdate
 
+-- -- Tree-sitter
 vim.api.nvim_create_autocmd("FileType", {
   pattern = {
     "c",
