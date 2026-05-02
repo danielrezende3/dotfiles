@@ -1,4 +1,4 @@
--- -- Leader keys
+-- -- -- -- Leader keys
 -- <leader> é uma tecla "prefixo" para atalhos personalizados.
 -- Aqui estamos usando espaço.
 --
@@ -9,7 +9,7 @@ vim.g.mapleader = " "
 vim.g.maplocalleader = " "
 
 
--- -- Opções básicas de interface
+-- -- -- -- Opções básicas de interface
 -- Mostra o número absoluto da linha atual.
 vim.opt.number = true
 -- Mostra números relativos nas outras linhas.
@@ -18,8 +18,20 @@ vim.opt.relativenumber = true
 -- Permite copiar/colar entre Neovim e outros programas.
 -- Requer suporte do sistema, por exemplo xclip/wl-clipboard dependendo do ambiente.
 vim.opt.clipboard = "unnamedplus"
+-- Show line/column position
+vim.opt.ruler = true
+-- Show vertical ruler at column 80
+vim.opt.colorcolumn = "80"
+vim.api.nvim_set_hl(0, "ColorColumn", { bg = "#B3B3B3" })
+-- Quebra linhas longas visualmente
+vim.opt.wrap = true
+-- Mantém a indentação visual nas linhas quebradas
+vim.opt.breakindent = true
+-- Evita quebrar palavras no meio, quebra na última palavra possível
+vim.opt.linebreak = true
 
--- -- Indentação
+
+-- -- -- -- Indentação
 -- Converte Tab em espaços.
 vim.opt.expandtab = true
 -- Um caractere Tab ocupa visualmente 4 colunas.
@@ -33,8 +45,7 @@ vim.opt.softtabstop = 4
 vim.opt.smartindent = true
 
 
-
--- -- Bootstrap lazy.nvim
+-- -- -- -- Bootstrap lazy.nvim
 -- lazy.nvim é o gerenciador de plugins.
 --
 -- Se ele ainda não existir, este bloco clona o repositório.
@@ -53,8 +64,7 @@ end
 vim.opt.rtp:prepend(lazypath)
 
 
-
--- -- Plugins com lazy.nvim
+-- -- -- -- Plugins com lazy.nvim
 require("lazy").setup({
   -- Tema lackluster.
   {
@@ -62,7 +72,12 @@ require("lazy").setup({
     lazy = false,
     priority = 1000,
     config = function()
-      vim.cmd.colorscheme("lackluster-mint")
+      vim.cmd.colorscheme("lackluster")
+      vim.opt.colorcolumn = "80"
+
+      vim.api.nvim_set_hl(0, "ColorColumn", {
+      bg = "#303030",
+    })
     end,
   },
   -- Configurações prontas de LSP para vários servidores.
@@ -116,14 +131,16 @@ require("lazy").setup({
   },
 })
 
--- -- LSP: C/C++ com clangd
+
+-- -- -- -- LSP: C/C++ com clangd
 -- clangd é o language server para C/C++.
 -- Requer clangd instalado no sistema:
 --
 -- sudo apt install clangd
 vim.lsp.enable("clangd")
 
--- -- Diagnostics: erros e warnings do LSP
+
+-- -- -- -- Diagnostics: erros e warnings do LSP
 vim.diagnostic.config({
   -- Mostra ícones na coluna da esquerda.
   signs = true,
@@ -145,7 +162,8 @@ vim.diagnostic.config({
   },
 })
 
--- -- Keymaps do LSP
+
+-- -- -- -- Keymaps do LSP
 -- Mostra diagnostics da linha atual em um popup.
 vim.keymap.set("n", "<leader>e", function()
   vim.diagnostic.open_float(nil, {
@@ -181,13 +199,11 @@ end, {
 vim.keymap.set("n", "<leader>rn", vim.lsp.buf.rename, {
   desc = "Rename symbol",
 })
-
 -- Mostra ações sugeridas pelo LSP.
 -- Exemplo: corrigir include, aplicar fix automático, organizar código etc.
 vim.keymap.set("n", "<leader>ca", vim.lsp.buf.code_action, {
   desc = "Code action",
 })
-
 -- Formata o arquivo atual usando o LSP.
 -- Para C/C++, normalmente depende de clang-format.
 --
@@ -202,8 +218,7 @@ end, {
 })
 
 
-
--- -- Tree-sitter
+-- -- -- -- Tree-sitter
 vim.api.nvim_create_autocmd("FileType", {
   pattern = {
     "c",
