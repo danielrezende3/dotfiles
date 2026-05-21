@@ -198,10 +198,11 @@ bindsym $mod+minus scratchpad show
 
 assign [app_id="google-chrome"] workspace 1
 assign [app_id="code"] workspace 2
-assign [app_id="evince"] workspace 3
-for_window [class="obsidian"] move to workspace 8
-assign [app_id="spotify"] workspace 9
+assign [app_id="evince"] workspace 2
+for_window [class="obsidian"] move to workspace 3
+assign [app_id="spotify"] workspace 10
 assign [app_id="org.gnome.clocks"] workspace 10
+assign [class="discord"] workspace 10
 
 
 ########################################
@@ -263,4 +264,5 @@ bar {
     }
 }
 
+# exec --no-startup-id /usr/bin/stremio-service >/dev/null 2>&1
 include /etc/sway/config.d/*
